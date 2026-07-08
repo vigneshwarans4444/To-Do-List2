@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { useAuth, loadAccounts, saveAccounts } from '../../context/AuthContext';
 import { X, Upload, Camera, User, Mail, Briefcase, Save, Check } from 'lucide-react';
 import styles from './ProfileEditModal.module.css';
@@ -57,6 +58,7 @@ export default function ProfileEditModal({ isOpen, onClose }) {
     return () => window.removeEventListener('keydown', handler);
   }, [isOpen, onClose]);
 
+  // Don't render anything if closed or no user
   if (!isOpen || !user) return null;
 
   const initials = name
@@ -109,8 +111,15 @@ export default function ProfileEditModal({ isOpen, onClose }) {
     }, 700);
   };
 
-  return (
-    <div className={styles.overlay} onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
+  // ── Render via portal directly into document.body ──────────
+  return ReactDOM.createPortal(
+    <div
+      className={styles.overlay}
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="profile-modal-title"
+    >
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
 
         {/* ── Header ── */}
@@ -155,19 +164,13 @@ export default function ProfileEditModal({ isOpen, onClose }) {
             aria-hidden="true"
           />
 
-          <button
-            className={styles.uploadBtn}
-            onClick={() => fileRef.current?.click()}
-          >
+          <button className={styles.uploadBtn} onClick={() => fileRef.current?.click()}>
             <Upload size={13} style={{ marginRight: 5 }} />
             Change Photo
           </button>
 
           {photo && (
-            <button
-              className={styles.removeBtn}
-              onClick={() => setPhoto(null)}
-            >
+            <button className={styles.removeBtn} onClick={() => setPhoto(null)}>
               Remove
             </button>
           )}
@@ -178,7 +181,9 @@ export default function ProfileEditModal({ isOpen, onClose }) {
 
           {/* Email — read-only */}
           <div className={styles.infoRow}>
-            <span className={styles.infoLabel}><Mail size={13} style={{ marginRight: 6 }} />Email</span>
+            <span className={styles.infoLabel}>
+              <Mail size={13} style={{ marginRight: 6 }} />Email
+            </span>
             <span className={styles.infoValue}>{user.verifiedEmail || user.email}</span>
           </div>
 
@@ -242,6 +247,7 @@ export default function ProfileEditModal({ isOpen, onClose }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body   // ← portal target: bypasses all CSS stacking contexts
   );
 }
