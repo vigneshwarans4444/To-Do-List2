@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 // Create context
 const TaskContext = createContext();
@@ -75,6 +76,16 @@ const defaultTasks = [
 // Reducer function
 function taskReducer(state, action) {
   switch (action.type) {
+    case 'LOAD_USER_DATA':
+      return {
+        ...state,
+        tasks: action.payload.tasks,
+        projects: action.payload.projects,
+        loadedEmail: action.payload.email,
+        theme: action.payload.theme || state.theme,
+        selectedTaskId: null
+      };
+
     case 'ADD_TASK':
       return {
         ...state,
@@ -177,15 +188,31 @@ function taskReducer(state, action) {
 
 // Context provider component
 export function TaskProvider({ children }) {
-  const [state, dispatch] = useReducer(taskReducer, null, () => {
+  const { auth } = useAuth();
+  const currentUserEmail = auth?.status === 'active' && auth.user?.email ? auth.user.email.toLowerCase() : null;
+
+  const getInitialState = () => {
+    let email = null;
     try {
-      const savedTasks = window.localStorage.getItem('todo_tasks');
-      const savedProjects = window.localStorage.getItem('todo_projects');
-      const savedTheme = window.localStorage.getItem('todo_theme') || 'light';
+      const savedAuth = window.localStorage.getItem('flowtodo_auth');
+      if (savedAuth) {
+        const parsedAuth = JSON.parse(savedAuth);
+        if (parsedAuth.status === 'active' && parsedAuth.user?.email) {
+          email = parsedAuth.user.email.toLowerCase();
+        }
+      }
+    } catch (e) { /* ignore */ }
+
+    try {
+      const savedTasks = email ? window.localStorage.getItem(`todo_tasks_${email}`) : null;
+      const savedProjects = email ? window.localStorage.getItem(`todo_projects_${email}`) : null;
+      const savedTheme = email 
+        ? (window.localStorage.getItem(`todo_theme_${email}`) || window.localStorage.getItem('todo_theme') || 'light') 
+        : (window.localStorage.getItem('todo_theme') || 'light');
 
       return {
-        tasks: savedTasks ? JSON.parse(savedTasks) : defaultTasks,
-        projects: savedProjects ? JSON.parse(savedProjects) : defaultProjects,
+        tasks: savedTasks ? JSON.parse(savedTasks) : (email ? defaultTasks : []),
+        projects: savedProjects ? JSON.parse(savedProjects) : (email ? defaultProjects : []),
         filters: {
           status: 'inbox',
           priority: 'all'
@@ -193,13 +220,14 @@ export function TaskProvider({ children }) {
         sortBy: 'dueDate',
         searchQuery: '',
         selectedTaskId: null,
-        theme: savedTheme
+        theme: savedTheme,
+        loadedEmail: email
       };
     } catch (e) {
       console.error('Failed to load tasks from local storage', e);
       return {
-        tasks: defaultTasks,
-        projects: defaultProjects,
+        tasks: [],
+        projects: [],
         filters: {
           status: 'inbox',
           priority: 'all'
@@ -207,26 +235,62 @@ export function TaskProvider({ children }) {
         sortBy: 'dueDate',
         searchQuery: '',
         selectedTaskId: null,
-        theme: 'light'
+        theme: 'light',
+        loadedEmail: null
       };
     }
-  });
+  };
 
-  // Sync state with localStorage
+  const [state, dispatch] = useReducer(taskReducer, null, getInitialState);
+
+  // Watch for auth email changes and load user specific data dynamically
   useEffect(() => {
-    if (state) {
-      window.localStorage.setItem('todo_tasks', JSON.stringify(state.tasks));
+    if (currentUserEmail) {
+      const savedTasks = window.localStorage.getItem(`todo_tasks_${currentUserEmail}`);
+      const savedProjects = window.localStorage.getItem(`todo_projects_${currentUserEmail}`);
+      const savedTheme = window.localStorage.getItem(`todo_theme_${currentUserEmail}`) || window.localStorage.getItem('todo_theme') || 'light';
+      
+      dispatch({
+        type: 'LOAD_USER_DATA',
+        payload: {
+          tasks: savedTasks ? JSON.parse(savedTasks) : defaultTasks,
+          projects: savedProjects ? JSON.parse(savedProjects) : defaultProjects,
+          theme: savedTheme,
+          email: currentUserEmail
+        }
+      });
+    } else {
+      // User is logged out, clear data
+      dispatch({
+        type: 'LOAD_USER_DATA',
+        payload: {
+          tasks: [],
+          projects: [],
+          theme: 'light',
+          email: null
+        }
+      });
     }
-  }, [state?.tasks]);
+  }, [currentUserEmail]);
 
+  // Sync state with localStorage only when loaded user state is in sync with logged in user
   useEffect(() => {
-    if (state) {
-      window.localStorage.setItem('todo_projects', JSON.stringify(state.projects));
+    if (state && currentUserEmail && state.loadedEmail === currentUserEmail) {
+      window.localStorage.setItem(`todo_tasks_${currentUserEmail}`, JSON.stringify(state.tasks));
     }
-  }, [state?.projects]);
+  }, [state?.tasks, state?.loadedEmail, currentUserEmail]);
+
+  useEffect(() => {
+    if (state && currentUserEmail && state.loadedEmail === currentUserEmail) {
+      window.localStorage.setItem(`todo_projects_${currentUserEmail}`, JSON.stringify(state.projects));
+    }
+  }, [state?.projects, state?.loadedEmail, currentUserEmail]);
 
   useEffect(() => {
     if (state) {
+      if (currentUserEmail && state.loadedEmail === currentUserEmail) {
+        window.localStorage.setItem(`todo_theme_${currentUserEmail}`, state.theme);
+      }
       window.localStorage.setItem('todo_theme', state.theme);
       
       let appliedTheme = state.theme;
@@ -237,7 +301,7 @@ export function TaskProvider({ children }) {
       
       document.documentElement.setAttribute('data-theme', appliedTheme);
     }
-  }, [state?.theme]);
+  }, [state?.theme, state?.loadedEmail, currentUserEmail]);
 
   // Handle system theme updates dynamically if 'system' theme is selected
   useEffect(() => {

@@ -1,10 +1,14 @@
 import React, { useRef } from 'react';
 import { useTasks } from '../../context/TaskContext';
+import { useAuth } from '../../context/AuthContext';
 import { X, BarChart2, Download, Upload, Percent, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import styles from './DashboardStats.module.css';
 
 export default function DashboardStats({ isOpen, onClose }) {
-  const { state } = useTasks();
+  const { state, dispatch } = useTasks();
+  const { auth } = useAuth();
+  const currentUserEmail = auth?.status === 'active' && auth.user?.email ? auth.user.email.toLowerCase() : null;
+  
   const { tasks, projects } = state;
   const fileInputRef = useRef(null);
 
@@ -84,11 +88,14 @@ export default function DashboardStats({ isOpen, onClose }) {
         }
 
         if (window.confirm('Importing this file will overwrite all your current tasks and projects. Proceed?')) {
-          localStorage.setItem('todo_tasks', JSON.stringify(importedData.tasks));
-          if (importedData.projects) {
-            localStorage.setItem('todo_projects', JSON.stringify(importedData.projects));
-          }
-          window.location.reload();
+          dispatch({
+            type: 'LOAD_USER_DATA',
+            payload: {
+              tasks: importedData.tasks,
+              projects: importedData.projects || (state.projects.length > 0 ? state.projects : []),
+              email: currentUserEmail
+            }
+          });
         }
       } catch (error) {
         alert('Failed to import backup file: ' + error.message);

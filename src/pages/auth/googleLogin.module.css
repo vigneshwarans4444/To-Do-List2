@@ -375,3 +375,58 @@
     align-items: flex-start;
   }
 }
+
+/* Suggestions dropdown styling */
+.suggestionsContainer {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  background-color: #1f1f20;
+  border: 1px solid #303030;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 99;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+
+.suggestionItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  color: #e3e3e3;
+  transition: background-color 0.15s ease;
+}
+
+.suggestionItem:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.suggestionItem:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.suggestionText {
+  display: flex;
+  flex-direction: column;
+}
+
+.suggestionName {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #e3e3e3;
+}
+
+.suggestionEmail {
+  font-size: 0.75rem;
+  color: #9e9e9e;
+}

@@ -74,6 +74,19 @@ export default function LoginPage() {
   );
   const [customEmail, setCustomEmail]   = useState('');
   const [emailError, setEmailError]     = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Filter registered accounts to get matching email suggestions
+  const suggestions = useMemo(() => {
+    const query = customEmail.trim().toLowerCase();
+    if (!query) {
+      return registeredAccounts;
+    }
+    return registeredAccounts.filter(acc =>
+      acc.email.toLowerCase().includes(query) ||
+      acc.name.toLowerCase().includes(query)
+    );
+  }, [customEmail, registeredAccounts]);
 
   // Redirect if already logged in or needs verification
   React.useEffect(() => {
@@ -218,7 +231,10 @@ export default function LoginPage() {
                     onChange={(e) => {
                       setCustomEmail(e.target.value);
                       setEmailError('');
+                      setShowSuggestions(true);
                     }}
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                     disabled={isLoading}
                     autoComplete="email"
                     autoFocus
@@ -226,6 +242,29 @@ export default function LoginPage() {
                   <label htmlFor="google-email-input" className={styles.inputLabel}>
                     Email or phone
                   </label>
+
+                  {/* Suggestions Dropdown */}
+                  {showSuggestions && suggestions.length > 0 && (
+                    <div className={styles.suggestionsContainer}>
+                      {suggestions.map((acc) => (
+                        <button
+                          key={acc.email}
+                          type="button"
+                          className={styles.suggestionItem}
+                          onClick={() => {
+                            setCustomEmail(acc.email);
+                            setShowSuggestions(false);
+                          }}
+                        >
+                          <AccountAvatar name={acc.name} photo={acc.photo} size={24} />
+                          <div className={styles.suggestionText}>
+                            <span className={styles.suggestionName}>{acc.name}</span>
+                            <span className={styles.suggestionEmail}>{acc.email}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {emailError && (
