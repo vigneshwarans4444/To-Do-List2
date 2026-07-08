@@ -1,20 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTasks } from '../../context/TaskContext';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import { Search, Sun, Moon, Laptop, BarChart2, CheckSquare, X, LogOut, User, ChevronDown } from 'lucide-react';
 import styles from './Header.module.css';
-import ProfileEditModal from '../Shared/ProfileEditModal';
 
-export default function Header({ onToggleStats, isStatsOpen }) {
+export default function Header({ onToggleStats, isStatsOpen, onEditProfile }) {
   const { state, dispatch } = useTasks();
   const { auth, dispatch: authDispatch } = useAuth();
-  const navigate = useNavigate();
   const { searchQuery, theme } = state;
   const user = auth?.user;
 
   const [profileOpen, setProfileOpen] = useState(false);
-  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const profileRef = useRef(null);
 
   // Close profile dropdown on outside click
@@ -58,13 +54,16 @@ export default function Header({ onToggleStats, isStatsOpen }) {
     authDispatch({ type: 'LOGOUT' });
   };
 
+  const handleEditProfile = () => {
+    setProfileOpen(false);   // close the dropdown
+    onEditProfile?.();        // call the parent-provided callback to open the modal
+  };
+
   const initials = user?.name
     ? user.name.trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
     : 'U';
 
   return (
-    // ProfileEditModal uses ReactDOM.createPortal → renders to document.body
-    // so it can live anywhere in the JSX tree without z-index issues
     <header className={styles.header}>
       {/* Logo + title */}
       <div className={styles.leftSection}>
@@ -161,9 +160,9 @@ export default function Header({ onToggleStats, isStatsOpen }) {
 
                 <div className={styles.dropdownDivider} />
 
-                {/* Edit Profile — opens popup modal (portal) */}
+                {/* Edit Profile — calls parent callback, no navigation */}
                 <button
-                  onClick={() => { setProfileOpen(false); setProfileModalOpen(true); }}
+                  onClick={handleEditProfile}
                   className={styles.dropdownItem}
                   role="menuitem"
                   id="edit-profile-btn"
@@ -186,12 +185,6 @@ export default function Header({ onToggleStats, isStatsOpen }) {
           </div>
         )}
       </div>
-
-      {/* Portal modal — renders to document.body via ReactDOM.createPortal */}
-      <ProfileEditModal
-        isOpen={profileModalOpen}
-        onClose={() => setProfileModalOpen(false)}
-      />
     </header>
   );
 }

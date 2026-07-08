@@ -17,20 +17,23 @@ import TaskList           from './components/Task/TaskList';
 import TaskForm           from './components/Task/TaskForm';
 import Modal              from './components/Shared/Modal';
 import DashboardStats     from './components/Shared/DashboardStats';
+import ProfileEditModal   from './components/Shared/ProfileEditModal';
 
 import styles from './App.module.css';
 
 // The protected inner app (task manager UI)
 function AppShell() {
-  const [isSidebarOpen,    setIsSidebarOpen]    = useState(false);
+  const [isSidebarOpen,      setIsSidebarOpen]      = useState(false);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
-  const [isStatsOpen,      setIsStatsOpen]      = useState(false);
+  const [isStatsOpen,        setIsStatsOpen]        = useState(false);
+  const [isProfileOpen,      setIsProfileOpen]      = useState(false);
 
   return (
     <div className={styles.container}>
       <Header
         onToggleStats={() => setIsStatsOpen(prev => !prev)}
         isStatsOpen={isStatsOpen}
+        onEditProfile={() => setIsProfileOpen(true)}
       />
 
       <div className={styles.main}>
@@ -50,6 +53,11 @@ function AppShell() {
       <DashboardStats
         isOpen={isStatsOpen}
         onClose={() => setIsStatsOpen(false)}
+      />
+      {/* Profile edit modal — rendered at app root, no z-index issues */}
+      <ProfileEditModal
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
       />
     </div>
   );
