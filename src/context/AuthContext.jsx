@@ -73,18 +73,27 @@ export function AuthProvider({ children }) {
     try {
       localStorage.setItem('flowtodo_auth', JSON.stringify(auth));
 
-      // Auto-register the active user to flowtodo_accounts if logged in
+      // Upsert the active user into flowtodo_accounts so sign-in page
+      // always reflects the latest name / photo after a profile edit.
       if (auth && auth.status === 'active' && auth.user && auth.user.email) {
         const existing = loadAccounts();
-        const alreadyThere = existing.some(
-          a => a.email.toLowerCase() === auth.user.email.toLowerCase()
+        const emailLower = auth.user.email.toLowerCase();
+        const idx = existing.findIndex(
+          a => a.email.toLowerCase() === emailLower
         );
-        if (!alreadyThere) {
-          saveAccounts([...existing, {
-            name: auth.user.name || '',
-            email: auth.user.email.toLowerCase(),
-            photo: auth.user.photo || null
-          }]);
+        const updatedEntry = {
+          name:  auth.user.name  || '',
+          email: emailLower,
+          photo: auth.user.photo || null,
+        };
+        if (idx === -1) {
+          // New account — append
+          saveAccounts([...existing, updatedEntry]);
+        } else {
+          // Existing account — update name & photo in-place
+          const updated = [...existing];
+          updated[idx] = { ...updated[idx], ...updatedEntry };
+          saveAccounts(updated);
         }
       }
     } catch (e) { /* ignore */ }

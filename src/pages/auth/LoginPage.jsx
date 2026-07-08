@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { loadAccounts } from '../../context/AuthContext';
@@ -66,7 +66,14 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { auth, dispatch } = useAuth();
 
-  const registeredAccounts = useMemo(() => loadAccounts(), []);
+  const [registeredAccounts, setRegisteredAccounts] = useState(() => loadAccounts());
+
+  // Re-read accounts from localStorage on every mount (e.g. after a profile edit)
+  useEffect(() => {
+    const fresh = loadAccounts();
+    setRegisteredAccounts(fresh);
+    setGoogleStep(fresh.length > 0 ? 'list' : 'input');
+  }, []);
 
   const [isLoading, setIsLoading]     = useState(false);
   const [loadingEmail, setLoadingEmail] = useState('');
