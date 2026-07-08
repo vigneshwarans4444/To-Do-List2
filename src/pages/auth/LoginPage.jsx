@@ -103,13 +103,14 @@ export default function LoginPage() {
       setIsLoading(false);
       setLoadingEmail('');
 
-      // Log in existing account directly
+      // Log in existing account — navigation is handled by the auth useEffect below
       dispatch({
         type: 'LOGIN_SUCCESS',
         payload: { ...account, verifiedEmail: account.email }
       });
-      navigate('/app', { replace: true });
-    }, 1200);
+      // DO NOT call navigate here; let the useEffect on auth.status handle it
+      // to avoid a race condition where ProtectedRoute still reads 'unauthenticated'
+    }, 800);
   };
 
   // Handle Next button click for custom email input
@@ -136,12 +137,11 @@ export default function LoginPage() {
       // Check if this email is already registered
       const existing = registeredAccounts.find(a => a.email === cleanEmail);
       if (existing) {
-        // Log in existing account directly
+        // Log in existing account — navigation handled by auth useEffect to avoid race condition
         dispatch({
           type: 'LOGIN_SUCCESS',
           payload: { ...existing, verifiedEmail: existing.email }
         });
-        navigate('/app', { replace: true });
       } else {
         // Go to profile setup pre-filled with this email
         navigate('/auth/profile-setup', {
