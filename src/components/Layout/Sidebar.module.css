@@ -1,0 +1,182 @@
+.sidebar {
+  width: 260px;
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 64px);
+  padding: var(--spacing-lg) var(--spacing-md);
+  overflow-y: auto;
+  transition: all var(--transition-slow);
+  z-index: 9;
+}
+
+.navSection {
+  margin-bottom: var(--spacing-xl);
+}
+
+.sectionTitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  padding: 0 var(--spacing-sm) var(--spacing-sm);
+}
+
+.navList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px var(--spacing-sm);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  text-decoration: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  transition: all var(--transition-fast);
+}
+
+.navItem:hover {
+  background-color: var(--bg-hover);
+}
+
+.navItemActive {
+  background-color: var(--bg-active);
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.navLinkLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: var(--bg-input);
+  color: var(--text-muted);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  transition: all var(--transition-fast);
+}
+
+.navItemActive .badge {
+  background-color: var(--primary-color);
+  color: var(--text-inverse);
+}
+
+.projectsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--spacing-sm) var(--spacing-sm);
+}
+
+.projectsHeader span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.addProjectBtn {
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  transition: all var(--transition-fast);
+}
+
+.addProjectBtn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-main);
+}
+
+.projectColorDot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+}
+
+.projectItem {
+  composes: navItem;
+}
+
+.projectItemActive {
+  composes: navItemActive;
+}
+
+.projectListItem {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-radius: var(--radius-md);
+  position: relative;
+}
+
+.projectListItem:hover .deleteProjectBtn {
+  opacity: 1;
+}
+
+.projectListItem .navItem {
+  flex: 1;
+}
+
+.deleteProjectBtn {
+  opacity: 0;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.deleteProjectBtn:hover {
+  background-color: var(--bg-hover);
+  color: var(--color-high);
+}
+
+/* Mobile responsive drawer overlay styles */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 64px;
+    left: 0;
+    bottom: 0;
+    transform: translateX(-100%);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .sidebarOpen {
+    transform: translateX(0);
+  }
+  
+  .overlay {
+    position: fixed;
+    top: 64px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 8;
+    backdrop-filter: blur(2px);
+    transition: opacity var(--transition-normal);
+  }
+}

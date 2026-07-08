@@ -1,0 +1,203 @@
+.card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  position: relative;
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+  user-select: none;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: var(--text-muted);
+  box-shadow: var(--shadow-md);
+}
+
+.cardActive {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 1px var(--primary-color), var(--shadow-sm);
+  background-color: var(--bg-active) !important;
+}
+
+.checkboxContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 2px;
+}
+
+.customCheckbox {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.customCheckbox:hover {
+  border-color: var(--primary-color);
+  background-color: rgba(26, 115, 232, 0.05);
+}
+
+.checkboxChecked {
+  border-color: var(--success-color);
+  background-color: var(--success-color);
+  color: var(--text-inverse);
+}
+
+.checkboxChecked:hover {
+  border-color: var(--success-color);
+  background-color: var(--success-color);
+  opacity: 0.8;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  min-width: 0; /* Ensures truncation works in children */
+}
+
+.title {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-main);
+  transition: color var(--transition-fast);
+  word-break: break-word;
+}
+
+.titleCompleted {
+  text-decoration: line-through;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.description {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-xs);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-app);
+  color: var(--text-muted);
+}
+
+.projectBadge {
+  font-weight: 500;
+}
+
+.dateBadge {
+  font-weight: 500;
+}
+
+.dateOverdue {
+  color: var(--color-high);
+  border-color: rgba(239, 68, 68, 0.2);
+  background-color: var(--color-high-bg);
+}
+
+.dateToday {
+  color: var(--primary-color);
+  border-color: rgba(26, 115, 232, 0.2);
+  background-color: var(--primary-light);
+}
+
+.priorityBadge {
+  text-transform: capitalize;
+  font-weight: 600;
+}
+
+.priority_high {
+  color: var(--color-high);
+  border-color: rgba(239, 68, 68, 0.2);
+  background-color: var(--color-high-bg);
+}
+
+.priority_medium {
+  color: var(--color-medium);
+  border-color: rgba(245, 158, 11, 0.2);
+  background-color: var(--color-medium-bg);
+}
+
+.priority_low {
+  color: var(--color-low);
+  border-color: rgba(107, 114, 128, 0.2);
+  background-color: var(--color-low-bg);
+}
+
+.subtasksBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+}
+
+.actionsSection {
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  transition: opacity var(--transition-fast);
+}
+
+.card:hover .actionsSection {
+  opacity: 1;
+}
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+}
+
+.actionBtn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-main);
+}
+
+.deleteBtn:hover {
+  background-color: var(--color-high-bg);
+  color: var(--color-high);
+}
+
+/* Responsive Overrides */
+@media (max-width: 768px) {
+  .actionsSection {
+    opacity: 1; /* Always show action buttons on mobile */
+  }
+}
