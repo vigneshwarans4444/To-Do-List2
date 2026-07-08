@@ -1,0 +1,145 @@
+.accountList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.accountCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 16px;
+  background-color: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition-normal);
+  color: var(--text-main);
+  box-shadow: var(--shadow-sm);
+}
+
+.accountCard:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.accountCard:active {
+  transform: translateY(0);
+}
+
+.accountCard:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.accountLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.accountInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.accountName {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+
+.accountEmail {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.accountRight {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chevron {
+  color: var(--text-muted);
+  transition: transform var(--transition-fast), color var(--transition-fast);
+}
+
+.accountCard:hover .chevron {
+  color: var(--primary-color);
+  transform: translateX(2px);
+}
+
+/* Add another account button */
+.addAccountBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 16px;
+  background-color: transparent;
+  border: 1.5px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition-normal);
+  color: var(--text-main);
+  margin-top: 4px;
+}
+
+.addAccountBtn:hover {
+  border-color: var(--primary-color);
+  background-color: var(--primary-light);
+  color: var(--primary-color);
+}
+
+.addAccountBtn:hover .accountName {
+  color: var(--primary-color);
+}
+
+.addAccountBtn:hover .chevron {
+  color: var(--primary-color);
+  transform: translateX(2px);
+}
+
+.addIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: var(--bg-input);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  border: 2px dashed var(--border-color);
+  transition: all var(--transition-normal);
+}
+
+.addAccountBtn:hover .addIcon {
+  background-color: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-color);
+  border-style: solid;
+}
+
+/* Spinner for individual account loading state */
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

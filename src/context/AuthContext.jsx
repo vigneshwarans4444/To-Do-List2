@@ -2,6 +2,24 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 
 const AuthContext = createContext();
 
+// ── Registered-accounts helpers ──────────────────────────────
+export const ACCOUNTS_KEY = 'flowtodo_accounts';
+
+export function loadAccounts() {
+  try {
+    const raw = localStorage.getItem(ACCOUNTS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) { /* ignore */ }
+  return [];
+}
+
+export function saveAccounts(accounts) {
+  try {
+    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+  } catch (e) { /* ignore */ }
+}
+
+// ── Auth session state ───────────────────────────────────────
 // Auth states: 'unauthenticated' | 'pending_verification' | 'active'
 const initialState = () => {
   try {
@@ -37,6 +55,11 @@ function authReducer(state, action) {
     case 'LOGOUT':
       return { user: null, status: 'unauthenticated' };
 
+    // Save a verified account to the persistent accounts registry.
+    // State itself doesn't change — side effect handled by the provider.
+    case 'REGISTER_ACCOUNT':
+      return state;
+
     default:
       return state;
   }
@@ -52,8 +75,22 @@ export function AuthProvider({ children }) {
     } catch (e) { /* ignore */ }
   }, [auth]);
 
+  // Wrap dispatch so REGISTER_ACCOUNT actually mutates the accounts list
+  const wrappedDispatch = (action) => {
+    if (action.type === 'REGISTER_ACCOUNT') {
+      const account = action.payload; // { name, email, photo }
+      const existing = loadAccounts();
+      const alreadyThere = existing.some(a => a.email === account.email);
+      if (!alreadyThere) {
+        saveAccounts([...existing, account]);
+      }
+      return;
+    }
+    dispatch(action);
+  };
+
   return (
-    <AuthContext.Provider value={{ auth, dispatch }}>
+    <AuthContext.Provider value={{ auth, dispatch: wrappedDispatch }}>
       {children}
     </AuthContext.Provider>
   );

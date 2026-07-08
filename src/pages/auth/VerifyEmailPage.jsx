@@ -138,6 +138,15 @@ export default function VerifyEmailPage() {
       if (code === otpCode) {
         clearInterval(timerRef.current);
         dispatch({ type: 'EMAIL_VERIFIED' });
+        // Persist this account to the registered-accounts registry
+        dispatch({
+          type: 'REGISTER_ACCOUNT',
+          payload: {
+            name:  auth.user?.name  || '',
+            email: auth.user?.email || '',
+            photo: auth.user?.photo || null,
+          }
+        });
         navigate('/app', { replace: true });
       } else {
         setError('Incorrect code. Please check your email and try again.');

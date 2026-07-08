@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { CheckSquare, Zap, Shield, Layers } from 'lucide-react';
+import { loadAccounts } from '../../context/AuthContext';
+import { CheckSquare, Zap, Shield, Layers, UserPlus, ChevronRight, LogIn } from 'lucide-react';
 import styles from './auth.module.css';
+import accountStyles from './accountPicker.module.css';
 
-// SVG inline Google logo for the button
+// SVG inline Google logo
 const GoogleLogo = () => (
   <svg className={styles.googleLogo} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -14,38 +16,61 @@ const GoogleLogo = () => (
   </svg>
 );
 
-// Simulated Google accounts pool — for demo / testing
-const DEMO_ACCOUNTS = [
-  { email: 'alice@gmail.com', name: 'Alice Johnson', photo: null },
-  { email: 'bob@gmail.com',   name: 'Bob Williams',  photo: null },
-  { email: 'carol@gmail.com', name: 'Carol Davis',   photo: null },
-];
+// Avatar: photo URL → image, otherwise initials
+function Avatar({ name, photo, size = 44 }) {
+  const initials = name ? name.trim().charAt(0).toUpperCase() : '?';
+  const hue = name
+    ? (name.charCodeAt(0) * 37 + name.charCodeAt(name.length - 1) * 17) % 360
+    : 200;
+
+  return (
+    <div
+      style={{
+        width: size, height: size, borderRadius: '50%',
+        background: photo ? 'transparent' : `linear-gradient(135deg, hsl(${hue},70%,55%), hsl(${(hue + 60) % 360},80%,45%))`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#fff', fontWeight: 700, fontSize: size * 0.38,
+        flexShrink: 0, overflow: 'hidden',
+        border: '2px solid rgba(255,255,255,0.15)',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+      }}
+    >
+      {photo
+        ? <img src={photo} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        : initials
+      }
+    </div>
+  );
+}
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const { auth, dispatch } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const [showAccountPicker, setShowAccountPicker] = useState(false);
 
-  // If already logged in as active, go straight to app
+  // Load registered accounts from localStorage
+  const registeredAccounts = useMemo(() => loadAccounts(), []);
+
+  const [isLoading, setIsLoading]               = useState(false);
+  const [loadingEmail, setLoadingEmail]         = useState('');
+  const [view, setView]                         = useState(
+    registeredAccounts.length > 0 ? 'picker' : 'welcome'
+  );
+
+  // Redirect if already logged in
   React.useEffect(() => {
-    if (auth.status === 'active') navigate('/app', { replace: true });
+    if (auth.status === 'active')              navigate('/app', { replace: true });
     if (auth.status === 'pending_verification') navigate('/auth/verify-email', { replace: true });
   }, [auth.status, navigate]);
 
-  const handleGoogleSignIn = () => {
-    setShowAccountPicker(true);
-  };
-
+  // Sign in with a registered account
   const handleSelectAccount = (account) => {
-    setShowAccountPicker(false);
+    setLoadingEmail(account.email);
     setIsLoading(true);
 
-    // Simulate OAuth round-trip delay
     setTimeout(() => {
       setIsLoading(false);
+      setLoadingEmail('');
 
-      // Check if this email matches an existing verified account in localStorage
       const savedAuth = (() => {
         try { return JSON.parse(localStorage.getItem('flowtodo_auth')); } catch { return null; }
       })();
@@ -53,26 +78,17 @@ export default function LoginPage() {
       const verifiedEmail = savedAuth?.user?.verifiedEmail;
 
       if (verifiedEmail && verifiedEmail !== account.email) {
-        // Different email detected → redirect to Alternative Email page
         navigate(`/auth/alternative-email?hint=${encodeURIComponent(account.email)}`);
         return;
       }
 
-      if (verifiedEmail && verifiedEmail === account.email) {
-        // Returning verified user — log them in directly
-        dispatch({
-          type: 'LOGIN_SUCCESS',
-          payload: { ...account, verifiedEmail: account.email }
-        });
-        navigate('/app', { replace: true });
-        return;
-      }
-
-      // Brand new user — go to profile setup with the chosen Google account pre-filled
-      navigate('/auth/profile-setup', {
-        state: { googleAccount: account }
+      // Returning verified user — log in directly
+      dispatch({
+        type: 'LOGIN_SUCCESS',
+        payload: { ...account, verifiedEmail: account.email }
       });
-    }, 1400);
+      navigate('/app', { replace: true });
+    }, 1200);
   };
 
   return (
@@ -114,32 +130,98 @@ export default function LoginPage() {
       {/* Right sign-in panel */}
       <div className={styles.rightPanel}>
         <div className={styles.formCard}>
-          <div className={styles.formHeader}>
-            <h2 className={styles.formTitle}>Welcome back 👋</h2>
-            <p className={styles.formSubtitle}>
-              Sign in with your Google account to access your workspace. Your tasks are waiting for you.
-            </p>
-          </div>
 
-          {!showAccountPicker ? (
+          {/* ── PICKER VIEW: show registered accounts ── */}
+          {view === 'picker' && (
             <>
+              <div className={styles.formHeader}>
+                <h2 className={styles.formTitle}>Welcome back 👋</h2>
+                <p className={styles.formSubtitle}>
+                  Choose an account to continue to FlowTodo.
+                </p>
+              </div>
+
+              <div className={accountStyles.accountList} role="list">
+                {registeredAccounts.map(acc => (
+                  <button
+                    key={acc.email}
+                    className={accountStyles.accountCard}
+                    onClick={() => handleSelectAccount(acc)}
+                    disabled={isLoading}
+                    role="listitem"
+                    id={`account-${acc.email.replace(/[@.]/g, '-')}`}
+                    aria-label={`Sign in as ${acc.name}, ${acc.email}`}
+                  >
+                    <div className={accountStyles.accountLeft}>
+                      <Avatar name={acc.name} photo={acc.photo} size={46} />
+                      <div className={accountStyles.accountInfo}>
+                        <span className={accountStyles.accountName}>{acc.name}</span>
+                        <span className={accountStyles.accountEmail}>{acc.email}</span>
+                      </div>
+                    </div>
+                    <div className={accountStyles.accountRight}>
+                      {isLoading && loadingEmail === acc.email ? (
+                        <span className={accountStyles.spinner} />
+                      ) : (
+                        <ChevronRight size={18} className={accountStyles.chevron} />
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Add another account */}
               <button
-                onClick={handleGoogleSignIn}
-                className={styles.googleBtn}
+                className={accountStyles.addAccountBtn}
+                onClick={() => setView('welcome')}
                 disabled={isLoading}
+                id="add-another-account-btn"
+              >
+                <div className={accountStyles.addIcon}>
+                  <UserPlus size={18} />
+                </div>
+                <div className={accountStyles.accountInfo}>
+                  <span className={accountStyles.accountName}>Use another account</span>
+                  <span className={accountStyles.accountEmail}>Sign in with a different Gmail</span>
+                </div>
+                <ChevronRight size={18} className={accountStyles.chevron} />
+              </button>
+
+              <div
+                className={`${styles.infoBanner} ${styles.infoBannerBlue}`}
+                role="note"
+              >
+                <Shield size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+                <span>
+                  FlowTodo uses Google Sign-In for secure, passwordless access.
+                  Only accounts you've previously registered appear here.
+                </span>
+              </div>
+            </>
+          )}
+
+          {/* ── WELCOME VIEW: no accounts or "use another" ── */}
+          {view === 'welcome' && (
+            <>
+              <div className={styles.formHeader}>
+                <h2 className={styles.formTitle}>
+                  {registeredAccounts.length > 0 ? 'Use another account' : 'Welcome to FlowTodo 👋'}
+                </h2>
+                <p className={styles.formSubtitle}>
+                  {registeredAccounts.length > 0
+                    ? 'Create a new account with a different Gmail address.'
+                    : 'Sign in with your Google account to access your workspace. Your tasks are waiting for you.'
+                  }
+                </p>
+              </div>
+
+              <button
+                onClick={() => navigate('/auth/profile-setup')}
+                className={styles.googleBtn}
                 id="google-signin-btn"
               >
-                {isLoading ? (
-                  <>
-                    <span className={styles.spinner} />
-                    Connecting to Google...
-                  </>
-                ) : (
-                  <>
-                    <GoogleLogo />
-                    Continue with Google
-                  </>
-                )}
+                <GoogleLogo />
+                Continue with Google
               </button>
 
               <div
@@ -152,66 +234,32 @@ export default function LoginPage() {
                   Your account is tied to one verified Google email for your security.
                 </span>
               </div>
+
+              {registeredAccounts.length > 0 && (
+                <p className={styles.formFooter}>
+                  <button
+                    className={styles.linkBtn}
+                    onClick={() => setView('picker')}
+                  >
+                    ← Back to account list
+                  </button>
+                </p>
+              )}
+
+              {registeredAccounts.length === 0 && (
+                <p className={styles.formFooter}>
+                  New to FlowTodo?{' '}
+                  <button
+                    className={styles.linkBtn}
+                    onClick={() => navigate('/auth/profile-setup')}
+                  >
+                    Create a free account
+                  </button>
+                </p>
+              )}
             </>
-          ) : (
-            /* Simulated Google account picker */
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: 4 }}>
-                Choose a Google account to continue:
-              </p>
-              {DEMO_ACCOUNTS.map(acc => (
-                <button
-                  key={acc.email}
-                  onClick={() => handleSelectAccount(acc)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 14,
-                    padding: '12px 16px',
-                    border: '1.5px solid var(--border-color)',
-                    borderRadius: 'var(--radius-md)',
-                    background: 'var(--bg-surface)',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.15s ease',
-                    color: 'var(--text-main)',
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary-color)'}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-color)'}
-                >
-                  <div style={{
-                    width: 40, height: 40, borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #1a73e8, #a142f4)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#fff', fontWeight: 700, fontSize: '1rem', flexShrink: 0
-                  }}>
-                    {acc.name.charAt(0)}
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 600 }}>{acc.name}</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{acc.email}</div>
-                  </div>
-                </button>
-              ))}
-              <button
-                onClick={() => setShowAccountPicker(false)}
-                className={styles.linkBtn}
-                style={{ marginTop: 8 }}
-              >
-                ← Back
-              </button>
-            </div>
           )}
 
-          <p className={styles.formFooter}>
-            New to FlowTodo?{' '}
-            <button
-              className={styles.linkBtn}
-              onClick={() => navigate('/auth/profile-setup')}
-            >
-              Create a free account
-            </button>
-          </p>
         </div>
       </div>
     </div>
