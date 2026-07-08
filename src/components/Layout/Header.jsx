@@ -53,8 +53,10 @@ export default function Header({ onToggleStats, isStatsOpen }) {
 
   const handleLogout = () => {
     setProfileOpen(false);
+    // Dispatch logout — ProtectedRoute will detect auth.status === 'unauthenticated'
+    // and redirect to /auth/login on the next render cycle.
+    // Do NOT call navigate() here to avoid a race condition.
     authDispatch({ type: 'LOGOUT' });
-    navigate('/auth/login');
   };
 
   // Derive avatar initials from user name
