@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import styles from './auth.module.css';
 
-const STEPS = ['Google Sign-In', 'Your Profile', 'Verify Email'];
+const STEPS = ['Google Sign-In', 'Verify Email'];
 const OTP_EXPIRY_SECONDS = 600; // 10 minutes
 
 export default function VerifyEmailPage() {
@@ -269,10 +269,10 @@ export default function VerifyEmailPage() {
         <div className={styles.formCard}>
 
           {/* Step indicator */}
-          <div className={styles.stepRow} role="progressbar" aria-valuenow={3} aria-valuemin={1} aria-valuemax={3}>
+          <div className={styles.stepRow} role="progressbar" aria-valuenow={2} aria-valuemin={1} aria-valuemax={2}>
             {STEPS.map((step, i) => {
-              const isDone   = i < 2;
-              const isActive = i === 2;
+              const isDone   = i < 1;
+              const isActive = i === 1;
               return (
                 <React.Fragment key={step}>
                   <div

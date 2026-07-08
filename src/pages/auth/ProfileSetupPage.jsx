@@ -11,10 +11,12 @@ export default function ProfileSetupPage() {
   const location = useLocation();
   const { auth, dispatch } = useAuth();
 
-  // Redirect if already logged in / active
+  // Redirect if already logged in or not authenticated
   React.useEffect(() => {
     if (auth?.status === 'active') {
       navigate('/app', { replace: true });
+    } else if (auth?.status === 'unauthenticated') {
+      navigate('/auth/login', { replace: true });
     }
   }, [auth?.status, navigate]);
 

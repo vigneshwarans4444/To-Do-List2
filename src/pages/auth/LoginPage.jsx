@@ -137,9 +137,19 @@ export default function LoginPage() {
           payload: { ...existing, verifiedEmail: existing.email },
         });
       } else {
-        // New account — go to profile setup
-        navigate('/auth/profile-setup', {
-          state: { googleAccount: { email: clean, name: '' } },
+        // New account — initialize profile with default name from email and skip setup page
+        const nameFromEmail = clean.split('@')[0]
+          .split(/[\._-]/)
+          .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(' ');
+        dispatch({
+          type: 'PROFILE_SAVED',
+          payload: {
+            name: nameFromEmail,
+            email: clean,
+            photo: null,
+            role: ''
+          }
         });
       }
     }, 1000);
