@@ -68,29 +68,30 @@ function authReducer(state, action) {
 export function AuthProvider({ children }) {
   const [auth, dispatch] = useReducer(authReducer, null, initialState);
 
-  // Persist auth state
+  // Persist auth state and sync to registered accounts registry
   useEffect(() => {
     try {
       localStorage.setItem('flowtodo_auth', JSON.stringify(auth));
+
+      // Auto-register the active user to flowtodo_accounts if logged in
+      if (auth && auth.status === 'active' && auth.user && auth.user.email) {
+        const existing = loadAccounts();
+        const alreadyThere = existing.some(
+          a => a.email.toLowerCase() === auth.user.email.toLowerCase()
+        );
+        if (!alreadyThere) {
+          saveAccounts([...existing, {
+            name: auth.user.name || '',
+            email: auth.user.email.toLowerCase(),
+            photo: auth.user.photo || null
+          }]);
+        }
+      }
     } catch (e) { /* ignore */ }
   }, [auth]);
 
-  // Wrap dispatch so REGISTER_ACCOUNT actually mutates the accounts list
-  const wrappedDispatch = (action) => {
-    if (action.type === 'REGISTER_ACCOUNT') {
-      const account = action.payload; // { name, email, photo }
-      const existing = loadAccounts();
-      const alreadyThere = existing.some(a => a.email === account.email);
-      if (!alreadyThere) {
-        saveAccounts([...existing, account]);
-      }
-      return;
-    }
-    dispatch(action);
-  };
-
   return (
-    <AuthContext.Provider value={{ auth, dispatch: wrappedDispatch }}>
+    <AuthContext.Provider value={{ auth, dispatch }}>
       {children}
     </AuthContext.Provider>
   );
