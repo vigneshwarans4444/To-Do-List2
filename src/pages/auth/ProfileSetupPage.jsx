@@ -9,7 +9,14 @@ const STEPS = ['Google Sign-In', 'Your Profile', 'Verify Email'];
 export default function ProfileSetupPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { dispatch } = useAuth();
+  const { auth, dispatch } = useAuth();
+
+  // Redirect if already logged in / active
+  React.useEffect(() => {
+    if (auth?.status === 'active') {
+      navigate('/app', { replace: true });
+    }
+  }, [auth?.status, navigate]);
 
   // Pre-filled from Google OAuth if coming from login flow
   const googleAccount = location.state?.googleAccount || null;

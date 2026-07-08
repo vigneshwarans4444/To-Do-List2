@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { useAuth, loadAccounts, saveAccounts } from '../../context/AuthContext';
-import { X, Upload, Camera, User, Mail, Briefcase, Save, Check } from 'lucide-react';
+import { X, Camera } from 'lucide-react';
 import styles from './ProfileEditModal.module.css';
 
 // ── Image compressor (128×128 JPEG ~80%) ─────────────────────
@@ -89,7 +89,7 @@ export default function ProfileEditModal({ isOpen, onClose }) {
         photo: photo,
       };
 
-      // Update auth session
+      // Update auth session with active status
       dispatch({ type: 'LOGIN_SUCCESS', payload: updatedUser });
 
       // Also update flowtodo_accounts so sign-in page reflects the change
@@ -107,7 +107,7 @@ export default function ProfileEditModal({ isOpen, onClose }) {
 
       setSaving(false);
       setSaved(true);
-      setTimeout(() => { setSaved(false); onClose(); }, 900);
+      setTimeout(() => { setSaved(false); onClose(); }, 800);
     }, 700);
   };
 
@@ -126,7 +126,7 @@ export default function ProfileEditModal({ isOpen, onClose }) {
         <div className={styles.modalHeader}>
           <h2 id="profile-modal-title" className={styles.modalTitle}>User Profile</h2>
           <button className={styles.closeBtn} onClick={onClose} aria-label="Close profile editor">
-            <X size={18} />
+            <X size={20} />
           </button>
         </div>
 
@@ -138,7 +138,7 @@ export default function ProfileEditModal({ isOpen, onClose }) {
             ) : (
               <div
                 className={styles.avatarInitials}
-                style={{ background: `linear-gradient(135deg, hsl(${hue},65%,50%), hsl(${(hue+60)%360},70%,38%))` }}
+                style={{ background: `linear-gradient(135deg, hsl(${hue},60%,50%), hsl(${(hue+60)%360},65%,38%))` }}
               >
                 {initials}
               </div>
@@ -164,90 +164,73 @@ export default function ProfileEditModal({ isOpen, onClose }) {
             aria-hidden="true"
           />
 
-          <button className={styles.uploadBtn} onClick={() => fileRef.current?.click()}>
-            <Upload size={13} style={{ marginRight: 5 }} />
-            Change Photo
+          <button className={styles.uploadTextBtn} onClick={() => fileRef.current?.click()}>
+            Upload Photo
           </button>
-
-          {photo && (
-            <button className={styles.removeBtn} onClick={() => setPhoto(null)}>
-              Remove
-            </button>
-          )}
         </div>
 
-        {/* ── Info rows ── */}
+        {/* ── Info rows (Styled exactly like user screenshot) ── */}
         <div className={styles.infoSection}>
 
-          {/* Email — read-only */}
+          {/* Email row (Read-only) */}
           <div className={styles.infoRow}>
-            <span className={styles.infoLabel}>
-              <Mail size={13} style={{ marginRight: 6 }} />Email
-            </span>
+            <span className={styles.infoLabel}>Email</span>
             <span className={styles.infoValue}>{user.verifiedEmail || user.email}</span>
           </div>
 
-          <div className={styles.divider} />
-
-          {/* Name — editable */}
+          {/* Name row (Editable) */}
           <div className={styles.infoRow}>
-            <label htmlFor="profile-modal-name" className={styles.infoLabel}>
-              <User size={13} style={{ marginRight: 6 }} />Name
-            </label>
+            <label htmlFor="profile-modal-name" className={styles.infoLabel}>Name</label>
             <input
               id="profile-modal-name"
               type="text"
               className={styles.infoInput}
               value={name}
               onChange={e => { setName(e.target.value); setError(''); }}
-              placeholder="Your full name"
-              maxLength={50}
+              placeholder="Your name"
+              maxLength={40}
             />
           </div>
 
-          <div className={styles.divider} />
-
-          {/* Role — editable */}
+          {/* Role row (Editable) */}
           <div className={styles.infoRow}>
-            <label htmlFor="profile-modal-role" className={styles.infoLabel}>
-              <Briefcase size={13} style={{ marginRight: 6 }} />Role
-            </label>
+            <label htmlFor="profile-modal-role" className={styles.infoLabel}>Role</label>
             <input
               id="profile-modal-role"
               type="text"
               className={styles.infoInput}
               value={role}
               onChange={e => setRole(e.target.value)}
-              placeholder="e.g. Developer, Manager…"
-              maxLength={50}
+              placeholder="Your role / department"
+              maxLength={40}
             />
           </div>
 
           {error && <p className={styles.errorMsg}>{error}</p>}
         </div>
 
-        {/* ── Footer buttons ── */}
+        {/* ── Footer ── */}
         <div className={styles.modalFooter}>
-          <button className={styles.cancelBtn} onClick={onClose} disabled={saving}>
-            Close
-          </button>
           <button
-            className={`${styles.saveBtn} ${saved ? styles.saveBtnSuccess : ''}`}
+            className={`${styles.primaryPurpleBtn} ${saved ? styles.successBtn : ''}`}
             onClick={handleSave}
             disabled={saving || saved}
             id="profile-modal-save-btn"
           >
             {saving ? (
-              <><span className={styles.spinner} /> Saving…</>
+              <><span className={styles.spinner} /> Saving changes...</>
             ) : saved ? (
-              <><Check size={15} style={{ marginRight: 5 }} /> Saved!</>
+              <>Saved Successfully!</>
             ) : (
-              <><Save size={15} style={{ marginRight: 5 }} /> Save Changes</>
+              <>Save Changes</>
             )}
+          </button>
+          <button className={styles.cancelLink} onClick={onClose} disabled={saving}>
+            Close
           </button>
         </div>
       </div>
     </div>,
-    document.body   // ← portal target: bypasses all CSS stacking contexts
+    document.body
   );
 }
