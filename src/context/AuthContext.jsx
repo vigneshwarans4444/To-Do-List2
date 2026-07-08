@@ -73,9 +73,11 @@ export function AuthProvider({ children }) {
     try {
       localStorage.setItem('flowtodo_auth', JSON.stringify(auth));
 
-      // Upsert the active user into flowtodo_accounts so sign-in page
-      // always reflects the latest name / photo after a profile edit.
-      if (auth && auth.status === 'active' && auth.user && auth.user.email) {
+      // Upsert the user into flowtodo_accounts so sign-in page always
+      // reflects the latest name / photo — covers both active sessions
+      // and in-progress profile edits (pending_verification).
+      if (auth && auth.user && auth.user.email &&
+          (auth.status === 'active' || auth.status === 'pending_verification')) {
         const existing = loadAccounts();
         const emailLower = auth.user.email.toLowerCase();
         const idx = existing.findIndex(

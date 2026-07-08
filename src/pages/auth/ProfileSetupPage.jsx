@@ -31,12 +31,35 @@ export default function ProfileSetupPage() {
     return errs;
   };
 
-  const handleAvatarChange = (e) => {
+  // Compress image to 128×128 JPEG ~80% quality so it safely fits in localStorage
+  const compressImage = (file) =>
+    new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          const SIZE = 128;
+          const canvas = document.createElement('canvas');
+          canvas.width = SIZE;
+          canvas.height = SIZE;
+          const ctx = canvas.getContext('2d');
+          // Centre-crop to square
+          const side = Math.min(img.width, img.height);
+          const sx = (img.width  - side) / 2;
+          const sy = (img.height - side) / 2;
+          ctx.drawImage(img, sx, sy, side, side, 0, 0, SIZE, SIZE);
+          resolve(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+  const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => setAvatarUrl(ev.target.result);
-    reader.readAsDataURL(file);
+    const compressed = await compressImage(file);
+    setAvatarUrl(compressed);
   };
 
   const handleSubmit = (e) => {
