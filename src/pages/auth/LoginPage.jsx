@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { loadAccounts } from '../../context/AuthContext';
-import { CheckSquare, Zap, Shield, Layers, UserPlus, ChevronRight, LogIn } from 'lucide-react';
+import { CheckSquare, Zap, Shield, Layers, UserPlus, ChevronRight, ArrowLeft } from 'lucide-react';
 import styles from './auth.module.css';
 import accountStyles from './accountPicker.module.css';
 
@@ -16,7 +16,7 @@ const GoogleLogo = () => (
   </svg>
 );
 
-// Avatar: photo URL → image, otherwise initials
+// Avatar component helper
 function Avatar({ name, photo, size = 44 }) {
   const initials = name ? name.trim().charAt(0).toUpperCase() : '?';
   const hue = name
@@ -47,14 +47,15 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { auth, dispatch } = useAuth();
 
-  // Load registered accounts from localStorage
+  // Load actually registered accounts from localStorage
   const registeredAccounts = useMemo(() => loadAccounts(), []);
 
   const [isLoading, setIsLoading]               = useState(false);
   const [loadingEmail, setLoadingEmail]         = useState('');
-  const [view, setView]                         = useState(
-    registeredAccounts.length > 0 ? 'picker' : 'welcome'
-  );
+  const [showGoogleSignIn, setShowGoogleSignIn] = useState(false);
+  const [googleStep, setGoogleStep]             = useState('list'); // 'list' | 'input'
+  const [customEmail, setCustomEmail]           = useState('');
+  const [emailError, setEmailError]             = useState('');
 
   // Redirect if already logged in
   React.useEffect(() => {
@@ -62,7 +63,17 @@ export default function LoginPage() {
     if (auth.status === 'pending_verification') navigate('/auth/verify-email', { replace: true });
   }, [auth.status, navigate]);
 
-  // Sign in with a registered account
+  // Handle click on Continue with Google
+  const handleGoogleSignInClick = () => {
+    setShowGoogleSignIn(true);
+    if (registeredAccounts.length > 0) {
+      setGoogleStep('list');
+    } else {
+      setGoogleStep('input');
+    }
+  };
+
+  // Sign in with a selected registered account
   const handleSelectAccount = (account) => {
     setLoadingEmail(account.email);
     setIsLoading(true);
@@ -71,17 +82,6 @@ export default function LoginPage() {
       setIsLoading(false);
       setLoadingEmail('');
 
-      const savedAuth = (() => {
-        try { return JSON.parse(localStorage.getItem('flowtodo_auth')); } catch { return null; }
-      })();
-
-      const verifiedEmail = savedAuth?.user?.verifiedEmail;
-
-      if (verifiedEmail && verifiedEmail !== account.email) {
-        navigate(`/auth/alternative-email?hint=${encodeURIComponent(account.email)}`);
-        return;
-      }
-
       // Returning verified user — log in directly
       dispatch({
         type: 'LOGIN_SUCCESS',
@@ -89,6 +89,45 @@ export default function LoginPage() {
       });
       navigate('/app', { replace: true });
     }, 1200);
+  };
+
+  // Handle submission of a custom email in the simulation
+  const handleCustomEmailSubmit = (e) => {
+    e.preventDefault();
+    const cleanEmail = customEmail.trim().toLowerCase();
+
+    if (!cleanEmail) {
+      setEmailError('Please enter your email address.');
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setEmailError('Please enter a valid email address.');
+      return;
+    }
+
+    setIsLoading(true);
+    setEmailError('');
+
+    setTimeout(() => {
+      setIsLoading(false);
+
+      // Check if this email is already registered
+      const existing = registeredAccounts.find(a => a.email === cleanEmail);
+      if (existing) {
+        // Log in existing account directly
+        dispatch({
+          type: 'LOGIN_SUCCESS',
+          payload: { ...existing, verifiedEmail: existing.email }
+        });
+        navigate('/app', { replace: true });
+      } else {
+        // Go to profile setup pre-filled with this email
+        navigate('/auth/profile-setup', {
+          state: { googleAccount: { email: cleanEmail, name: '' } }
+        });
+      }
+    }, 1000);
   };
 
   return (
@@ -131,92 +170,18 @@ export default function LoginPage() {
       <div className={styles.rightPanel}>
         <div className={styles.formCard}>
 
-          {/* ── PICKER VIEW: show registered accounts ── */}
-          {view === 'picker' && (
+          {/* ── VIEW 1: Main Welcome Screen ── */}
+          {!showGoogleSignIn && (
             <>
               <div className={styles.formHeader}>
-                <h2 className={styles.formTitle}>Welcome back 👋</h2>
+                <h2 className={styles.formTitle}>Welcome to FlowTodo 👋</h2>
                 <p className={styles.formSubtitle}>
-                  Choose an account to continue to FlowTodo.
-                </p>
-              </div>
-
-              <div className={accountStyles.accountList} role="list">
-                {registeredAccounts.map(acc => (
-                  <button
-                    key={acc.email}
-                    className={accountStyles.accountCard}
-                    onClick={() => handleSelectAccount(acc)}
-                    disabled={isLoading}
-                    role="listitem"
-                    id={`account-${acc.email.replace(/[@.]/g, '-')}`}
-                    aria-label={`Sign in as ${acc.name}, ${acc.email}`}
-                  >
-                    <div className={accountStyles.accountLeft}>
-                      <Avatar name={acc.name} photo={acc.photo} size={46} />
-                      <div className={accountStyles.accountInfo}>
-                        <span className={accountStyles.accountName}>{acc.name}</span>
-                        <span className={accountStyles.accountEmail}>{acc.email}</span>
-                      </div>
-                    </div>
-                    <div className={accountStyles.accountRight}>
-                      {isLoading && loadingEmail === acc.email ? (
-                        <span className={accountStyles.spinner} />
-                      ) : (
-                        <ChevronRight size={18} className={accountStyles.chevron} />
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              {/* Add another account */}
-              <button
-                className={accountStyles.addAccountBtn}
-                onClick={() => setView('welcome')}
-                disabled={isLoading}
-                id="add-another-account-btn"
-              >
-                <div className={accountStyles.addIcon}>
-                  <UserPlus size={18} />
-                </div>
-                <div className={accountStyles.accountInfo}>
-                  <span className={accountStyles.accountName}>Use another account</span>
-                  <span className={accountStyles.accountEmail}>Sign in with a different Gmail</span>
-                </div>
-                <ChevronRight size={18} className={accountStyles.chevron} />
-              </button>
-
-              <div
-                className={`${styles.infoBanner} ${styles.infoBannerBlue}`}
-                role="note"
-              >
-                <Shield size={16} style={{ flexShrink: 0, marginTop: 2 }} />
-                <span>
-                  FlowTodo uses Google Sign-In for secure, passwordless access.
-                  Only accounts you've previously registered appear here.
-                </span>
-              </div>
-            </>
-          )}
-
-          {/* ── WELCOME VIEW: no accounts or "use another" ── */}
-          {view === 'welcome' && (
-            <>
-              <div className={styles.formHeader}>
-                <h2 className={styles.formTitle}>
-                  {registeredAccounts.length > 0 ? 'Use another account' : 'Welcome to FlowTodo 👋'}
-                </h2>
-                <p className={styles.formSubtitle}>
-                  {registeredAccounts.length > 0
-                    ? 'Create a new account with a different Gmail address.'
-                    : 'Sign in with your Google account to access your workspace. Your tasks are waiting for you.'
-                  }
+                  Sign in with your Google account to access your workspace. Your tasks are waiting for you.
                 </p>
               </div>
 
               <button
-                onClick={() => navigate('/auth/profile-setup')}
+                onClick={handleGoogleSignInClick}
                 className={styles.googleBtn}
                 id="google-signin-btn"
               >
@@ -234,28 +199,145 @@ export default function LoginPage() {
                   Your account is tied to one verified Google email for your security.
                 </span>
               </div>
+            </>
+          )}
 
-              {registeredAccounts.length > 0 && (
-                <p className={styles.formFooter}>
+          {/* ── VIEW 2: Google Account Picker / Custom Input Screen ── */}
+          {showGoogleSignIn && (
+            <>
+              {/* LIST STEP: Choose from registered accounts */}
+              {googleStep === 'list' && (
+                <>
+                  <div className={styles.formHeader}>
+                    <h2 className={styles.formTitle}>Choose an account</h2>
+                    <p className={styles.formSubtitle}>
+                      to continue to <strong style={{ color: 'var(--text-main)' }}>FlowTodo</strong>
+                    </p>
+                  </div>
+
+                  <div className={accountStyles.accountList} role="list">
+                    {registeredAccounts.map(acc => (
+                      <button
+                        key={acc.email}
+                        className={accountStyles.accountCard}
+                        onClick={() => handleSelectAccount(acc)}
+                        disabled={isLoading}
+                        role="listitem"
+                        id={`account-${acc.email.replace(/[@.]/g, '-')}`}
+                        aria-label={`Sign in as ${acc.name}, ${acc.email}`}
+                      >
+                        <div className={accountStyles.accountLeft}>
+                          <Avatar name={acc.name} photo={acc.photo} size={46} />
+                          <div className={accountStyles.accountInfo}>
+                            <span className={accountStyles.accountName}>{acc.name}</span>
+                            <span className={accountStyles.accountEmail}>{acc.email}</span>
+                          </div>
+                        </div>
+                        <div className={accountStyles.accountRight}>
+                          {isLoading && loadingEmail === acc.email ? (
+                            <span className={accountStyles.spinner} />
+                          ) : (
+                            <ChevronRight size={18} className={accountStyles.chevron} />
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Option to use a new/another account */}
+                  <button
+                    className={accountStyles.addAccountBtn}
+                    onClick={() => { setGoogleStep('input'); setCustomEmail(''); setEmailError(''); }}
+                    disabled={isLoading}
+                    id="use-another-account-btn"
+                  >
+                    <div className={accountStyles.addIcon}>
+                      <UserPlus size={18} />
+                    </div>
+                    <div className={accountStyles.accountInfo}>
+                      <span className={accountStyles.accountName}>Use another account</span>
+                      <span className={accountStyles.accountEmail}>Sign in with a different Gmail</span>
+                    </div>
+                    <ChevronRight size={18} className={accountStyles.chevron} />
+                  </button>
+
                   <button
                     className={styles.linkBtn}
-                    onClick={() => setView('picker')}
+                    onClick={() => setShowGoogleSignIn(false)}
+                    disabled={isLoading}
+                    style={{ marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                   >
-                    ← Back to account list
+                    <ArrowLeft size={16} /> Cancel
                   </button>
-                </p>
+                </>
               )}
 
-              {registeredAccounts.length === 0 && (
-                <p className={styles.formFooter}>
-                  New to FlowTodo?{' '}
-                  <button
-                    className={styles.linkBtn}
-                    onClick={() => navigate('/auth/profile-setup')}
-                  >
-                    Create a free account
-                  </button>
-                </p>
+              {/* INPUT STEP: Enter custom Gmail address */}
+              {googleStep === 'input' && (
+                <>
+                  <div className={styles.formHeader}>
+                    <h2 className={styles.formTitle}>Sign in with Google</h2>
+                    <p className={styles.formSubtitle}>
+                      to continue to <strong style={{ color: 'var(--text-main)' }}>FlowTodo</strong>
+                    </p>
+                  </div>
+
+                  <form onSubmit={handleCustomEmailSubmit} noValidate>
+                    <div className={styles.formBody}>
+                      <div className={styles.field}>
+                        <label htmlFor="google-email-input" className={styles.label}>
+                          Email or phone
+                        </label>
+                        <input
+                          id="google-email-input"
+                          type="email"
+                          className={`${styles.input} ${emailError ? styles.inputError : ''}`}
+                          placeholder="Enter your Gmail address"
+                          value={customEmail}
+                          onChange={(e) => { setCustomEmail(e.target.value); setEmailError(''); }}
+                          disabled={isLoading}
+                          autoFocus
+                          autoComplete="email"
+                        />
+                        {emailError && (
+                          <span className={styles.errorMsg} role="alert" style={{ marginTop: 4 }}>
+                            {emailError}
+                          </span>
+                        )}
+                      </div>
+
+                      <button
+                        type="submit"
+                        className={styles.submitBtn}
+                        disabled={isLoading}
+                        id="google-email-next-btn"
+                      >
+                        {isLoading ? (
+                          <><span className={styles.spinner} /> Connecting...</>
+                        ) : (
+                          'Next'
+                        )}
+                      </button>
+                    </div>
+                  </form>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12 }}>
+                    <button
+                      className={styles.linkBtn}
+                      onClick={() => {
+                        if (registeredAccounts.length > 0) {
+                          setGoogleStep('list');
+                        } else {
+                          setShowGoogleSignIn(false);
+                        }
+                      }}
+                      disabled={isLoading}
+                      style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                    >
+                      <ArrowLeft size={16} /> Back
+                    </button>
+                  </div>
+                </>
               )}
             </>
           )}
