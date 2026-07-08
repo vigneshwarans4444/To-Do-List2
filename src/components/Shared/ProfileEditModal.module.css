@@ -1,0 +1,292 @@
+/* ── Overlay ───────────────────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: fadeIn 0.18s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Modal card ─────────────────────────────────────────────── */
+.modal {
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideUp 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  margin: 16px;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+/* ── Modal header ───────────────────────────────────────────── */
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modalTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+.closeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--text-muted);
+  transition: background 0.15s, color 0.15s;
+}
+
+.closeBtn:hover {
+  background: var(--bg-hover);
+  color: var(--text-main);
+}
+
+/* ── Avatar section ─────────────────────────────────────────── */
+.avatarSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 28px 22px 20px;
+  background: linear-gradient(
+    180deg,
+    var(--bg-app) 0%,
+    var(--bg-surface) 100%
+  );
+}
+
+.avatarWrapper {
+  position: relative;
+  width: 110px;
+  height: 110px;
+}
+
+.avatarImg,
+.avatarInitials {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 3px solid var(--primary-color);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+  object-fit: cover;
+}
+
+.avatarInitials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+/* camera overlay button */
+.cameraBtn {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  transition: background 0.15s, transform 0.15s;
+  border: 2px solid var(--bg-surface);
+}
+
+.cameraBtn:hover {
+  background: var(--primary-hover, #5856e3);
+  transform: scale(1.1);
+}
+
+.uploadBtn {
+  display: flex;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--primary-color);
+  transition: background 0.15s, color 0.15s;
+}
+
+.uploadBtn:hover {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.removeBtn {
+  font-size: 0.75rem;
+  color: var(--color-high, #ea4335);
+  padding: 2px 8px;
+  border-radius: 12px;
+  transition: background 0.15s;
+}
+
+.removeBtn:hover {
+  background: rgba(234, 67, 53, 0.1);
+}
+
+/* ── Info rows ──────────────────────────────────────────────── */
+.infoSection {
+  padding: 4px 22px 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  gap: 8px;
+}
+
+.infoLabel {
+  display: flex;
+  align-items: center;
+  width: 76px;
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.infoValue {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.infoInput {
+  flex: 1;
+  height: 36px;
+  padding: 0 12px;
+  background: var(--bg-input);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--text-main);
+  font-size: 0.9rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.infoInput:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  outline: none;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 0 -2px;
+}
+
+.errorMsg {
+  font-size: 0.78rem;
+  color: var(--color-high, #ea4335);
+  margin-top: 6px;
+}
+
+/* ── Footer ─────────────────────────────────────────────────── */
+.modalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 22px 18px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-app);
+}
+
+.cancelBtn {
+  padding: 9px 18px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 10px;
+  color: var(--text-muted);
+  transition: background 0.15s, color 0.15s;
+}
+
+.cancelBtn:hover {
+  background: var(--bg-hover);
+  color: var(--text-main);
+}
+
+.saveBtn {
+  display: flex;
+  align-items: center;
+  padding: 9px 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 10px;
+  background: var(--primary-color);
+  color: #fff;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.saveBtn:hover:not(:disabled) {
+  background: var(--primary-hover, #5856e3);
+  transform: translateY(-1px);
+}
+
+.saveBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.saveBtnSuccess {
+  background: #22c55e !important;
+}
+
+/* ── Spinner ────────────────────────────────────────────────── */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin-right: 7px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

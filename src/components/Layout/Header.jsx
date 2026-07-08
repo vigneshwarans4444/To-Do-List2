@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Search, Sun, Moon, Laptop, BarChart2, CheckSquare, X, LogOut, User, ChevronDown } from 'lucide-react';
 import styles from './Header.module.css';
+import ProfileEditModal from '../Shared/ProfileEditModal';
 
 export default function Header({ onToggleStats, isStatsOpen }) {
   const { state, dispatch } = useTasks();
@@ -13,6 +14,7 @@ export default function Header({ onToggleStats, isStatsOpen }) {
   const user = auth?.user;
 
   const [profileOpen, setProfileOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const profileRef = useRef(null);
 
   // Close profile dropdown on outside click
@@ -65,7 +67,8 @@ export default function Header({ onToggleStats, isStatsOpen }) {
     : 'U';
 
   return (
-    <header className={styles.header}>
+    <>
+      <header className={styles.header}>
       {/* Logo + title */}
       <div className={styles.leftSection}>
         <div className={styles.logoContainer} aria-hidden="true">
@@ -163,7 +166,7 @@ export default function Header({ onToggleStats, isStatsOpen }) {
 
                 {/* Profile link */}
                 <button
-                  onClick={() => { setProfileOpen(false); navigate('/auth/profile-setup'); }}
+                  onClick={() => { setProfileOpen(false); setProfileModalOpen(true); }}
                   className={styles.dropdownItem}
                   role="menuitem"
                 >
@@ -186,5 +189,11 @@ export default function Header({ onToggleStats, isStatsOpen }) {
         )}
       </div>
     </header>
+      {/* Profile edit popup */}
+      <ProfileEditModal
+        isOpen={profileModalOpen}
+        onClose={() => setProfileModalOpen(false)}
+      />
+    </>
   );
 }
